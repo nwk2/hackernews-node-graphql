@@ -1,0 +1,24 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db" 
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Link {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  description String
+  url         String
+}
+
+// 1. define model / make changes to model
+// 2. migrate using `npx prisma migrate`
+// 3. regenerate prisma client `npx prisma generate`
+// 4. use prisma client to interact with DB
+

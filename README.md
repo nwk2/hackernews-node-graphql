@@ -4,6 +4,7 @@ npm i
 npm start
 ```
 Go to localhost:4000 to access GraphQL playground
+
 Example queries:
 ```
 query {
@@ -35,4 +36,7 @@ mutation {
 ### TODO
 - [x] bare graphql node server with nodemon
 - [x] in-memory crud operations
-- [ ] add database: https://www.howtographql.com/graphql-js/4-adding-a-database/
+- [x] add database: https://www.howtographql.com/graphql-js/4-adding-a-database/
+  - add prisma client to interact with db
+  - server communicate with db via prisma
+- [ ] authentication: https://www.howtographql.com/graphql-js/6-authentication/

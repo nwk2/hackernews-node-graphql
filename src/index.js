@@ -1,27 +1,24 @@
 const { ApolloServer } = require('apollo-server')
 const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core')
+const { PrismaClient } = require('@prisma/client')
 
 const fs = require('fs')
 const path = require('path')
-
-// Dummy data for Links
-let links = [{
-    id: 'link-0',
-    url: 'www.howtographql.com',
-    description: 'Some description'
-}]
-let idCount = links.length
 
 // Implementation of schema
 const resolvers = {
     Query: {
         info: () => `This is the API of hackernews clone`,
-        feed: () => links,
-        link: (_, args) => {
-            let link = links.filter((link) => link.id === args.id)
-            return link[0]
-            // how to handle if link not found?
-        }
+        feed: async (parent, args, context) => {
+            return context.prisma.link.findMany()
+        },
+        link: async (parent, args, context) => {
+            return context.prisma.link.findUnique({
+                where: {
+                    id: parseInt(args.id)
+                }
+            })
+       }
     },
     // this is not needed, just for illustration of how links are resolved in 'feed' above
     // Link: {
@@ -30,40 +27,39 @@ const resolvers = {
     //     url: (parent) => parent.url
     // },
     Mutation: {
-        createLink: (_, args) => {
-            const link = {
-                id: `link-${idCount++}`,
-                url: args.url,
-                description: args.description
-            }
-            links.push(link)
-            return link
-        },
-        updateLink: (_, args) => {
-            // filter to find item
-            // if found => get index => replace
-            // if not found => do nothing
-            const filteredList = links.filter((link) => link.id === args.id)
-            if (filteredList[0]) {
-                let linkToUpdate = filteredList[0]
-                if (args.url) {
-                    linkToUpdate.url = args.url
+        createLink: (_, args, context) => {
+            const newLink = context.prisma.link.create({
+                data: {
+                    url: args.url,
+                    description: args.description
                 }
-                if (args.description) {
-                    linkToUpdate.description = args.url
+            })
+            return newLink
+       },
+        updateLink: (_, args, context) => {
+            const updateLink = context.prisma.link.update({
+                where: {
+                    id: parseInt(args.id)
+                },
+                data: {
+                    url: args.url,
+                    description: args.description
                 }
-                return linkToUpdate
-            }
+            })
+            return updateLink
         },
-        deleteLink: (_, args) => {
-            const linkToDelete = links.filter((link) => link.id === args.id)
-            if (linkToDelete[0]) {
-                links = links.filter((link) => link.id !== args.id)
-            }
-            return linkToDelete[0]
+        deleteLink: (_, args, context) => {
+            const deleteLink = context.prisma.link.delete({
+                where: {
+                    id: parseInt(args.id)
+                }
+            })
+            return deleteLink
         }
     }
 }
+
+const prisma = new PrismaClient()
 
 const server = new ApolloServer({
     typeDefs: fs.readFileSync(
@@ -73,7 +69,8 @@ const server = new ApolloServer({
     resolvers,
     plugins: [
         ApolloServerPluginLandingPageGraphQLPlayground
-    ]
+    ],
+    context: { prisma }
 })
 
 server
